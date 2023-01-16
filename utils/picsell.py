@@ -43,13 +43,13 @@ def get_picsellia_datasets(
         """ 
         Assuming that you have 3 versions of a Dataset "train", "test", "split"
         """
-        client = get_picsellia_client()
-        dataset = client.get_dataset(dataset_name)
-        train_ds = dataset.get_version(train_ds)
-        if test_ds is None or val_ds is None:
-            return (train_ds,) + split_ds_in_train_test_split(train_ds, random_seed=42) # TODO -> make it a variable
-        test_ds = dataset.get_version(test_ds)
-        val_ds = dataset.get_version(val_ds)
+        with get_picsellia_client() as client:
+            dataset = client.get_dataset(dataset_name)
+            train_ds = dataset.get_version(train_ds)
+            if test_ds is None or val_ds is None:
+                return (train_ds,) + split_ds_in_train_test_split(train_ds, random_seed=42) # TODO -> make it a variable
+            test_ds = dataset.get_version(test_ds)
+            val_ds = dataset.get_version(val_ds)
         return (None,) + (train_ds, test_ds, val_ds)
     
     
