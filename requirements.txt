@@ -1,0 +1,4 @@
+ultralytics
+picsellia
+torch
+tqdm
