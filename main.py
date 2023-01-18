@@ -50,13 +50,14 @@ if __name__ == "__main__":
     yaml_fp = formatter.generate_yaml(dpath=os.path.join(imdir, 'data.yaml'))
 
     model = YOLO("yolov8n.pt")
-    results = model.train(data=yaml_fp, epochs=3)
+    results = model.train(data=yaml_fp, epochs=epochs)
     
     wpath, rpath = yolo.get_train_infos(train_ds.type)
     try:
         success = model.export(format="onnx")
         experiment.store('weights', path=wpath)
         experiment.store('model-latest', path=wpath.replace('pt', 'onnx'))
+
         res = pd.read_csv(rpath)
         for col in res.columns:
             try:

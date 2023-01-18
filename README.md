@@ -21,3 +21,18 @@ Your Yolo models for:
 This repository assume that you have an account on Picsellia Platform. 
 
 The Datasets we are going to use are COCO formatted, you will also find code snippets to format from COCO to YOLO format.
+
+
+## Installation 
+
+Via pip
+
+```bash
+pip install -r requirements.txt
+```
+
+Or with Docker 
+
+```bash
+docker build -t yolov8-picsellia .
+```
