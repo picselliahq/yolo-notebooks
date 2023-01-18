@@ -19,10 +19,14 @@ import random
 
 
 def get_picsellia_client(organization_name: str = None) -> Client:
-    api_token = os.environ.get("PICSELLIA_TOKEN")
+    api_token = os.environ.get("api_token")
     if api_token is None:
         api_token = input("Please enter your TOKEN here :")
-    return picsellia.Client(api_token=api_token, organization_name=organization_name)
+    organization_id = os.environ.get("organization_id")
+    if organization_id is None:
+        organization_id = input("Please enter your ORGANIZATorganization_idON_ID here :")
+    
+    return picsellia.Client(api_token=api_token, organization_id=organization_id)
 
 def split_ds_in_train_test_split(full_ds: PicselliaDatasetVersion, random_seed = 42):
     train_assets, eval_assets, count_train, count_eval, labels = full_ds.train_test_split(random_seed=random_seed)
@@ -34,6 +38,20 @@ def split_ds_in_train_test_split(full_ds: PicselliaDatasetVersion, random_seed =
     val_assets = MultiAsset(full_ds.connexion, full_ds.id, val_data)
     test_assets = MultiAsset(full_ds.connexion, full_ds.id, test_data)
     return (train_assets, test_assets, val_assets)
+
+
+def get_picsellia_project() -> PicselliaProject:
+    project_name = os.environ.get("project_name")
+    if project_name is None:
+        project_name = input("Please enter your project_name here :")
+    return get_picsellia_client().get_project(project_name=project_name)
+
+
+def get_picsellia_experiment() -> PicselliaExperiment:
+    experiment_name = os.environ.get("experiment_name")
+    if experiment_name is None:
+        experiment_name = input("Please enter your experiment_name here :")
+    return get_picsellia_project().get_experiment(name=experiment_name)
 
 
 def get_picsellia_datasets(

@@ -2,3 +2,6 @@ ultralytics
 picsellia
 torch
 tqdm
+cython
+pycocotools
+pandas

@@ -2,33 +2,77 @@ from utils import (
     picsell, yolo
 )
 import os
-from picsellia.types.enums import AnnotationFileType
+from picsellia.types.enums import (
+    AnnotationFileType, LogType
+)
+import pandas as pd 
 from ultralytics import YOLO
-from ultralytics.yolo.v8.detect import DetectionTrainer
 
 if __name__ == "__main__":
-
     imdir = "data"
+    if not os.path.isdir(imdir):
+        os.mkdir(imdir)
 
-    full_ds, train, test, val = picsell.get_picsellia_datasets(dataset_name="Retail Shelves", train_ds="First", test_ds=None)
+    if not os.path.isdir("runs"):
+        os.mkdir("runs")
 
-    train.download(target_path=os.path.join(imdir, 'train', 'images'), max_workers=10)
-    val.download(target_path=os.path.join(imdir, 'val', 'images'), max_workers=10)
-    test.download(target_path=os.path.join(imdir, 'test', 'images'), max_workers=10)
+    experiment = picsell.get_picsellia_experiment()
+    train_ds, test_ds, val_ds = picsell.get_train_test_valid_datasets(experiment=experiment)
+    parameters = experiment.get_log('parameters').data
 
-    annotation_path = full_ds.export_annotation_file(AnnotationFileType.COCO, imdir)
+    epochs = parameters.get("epochs", 30) # try to find the number of epochs in parameter, otherwise set to 30
 
-    converter = yolo.YOLOFormatter(
-        fpath=annotation_path,
+    train_ds.download(target_path=os.path.join(imdir, 'train', 'images'), max_workers=10)
+    val_ds.download(target_path=os.path.join(imdir, 'val', 'images'), max_workers=10)
+    test_ds.download(target_path=os.path.join(imdir, 'test', 'images'), max_workers=10)
+
+    formatter = yolo.YOLOFormatter(
+        fpath=train_ds.export_annotation_file(AnnotationFileType.COCO, imdir),
         imdir=imdir,
-        mode=yolo.Task.DETECTION
+        mode=train_ds.type,
+        steps="train"
     )
+    formatter.convert()
 
-    converter.convert()
-    yaml_fp = converter.generate_yaml(dpath=os.path.join(imdir, 'data.yaml'))
+    yolo.YOLOFormatter(
+        fpath=val_ds.export_annotation_file(AnnotationFileType.COCO, imdir),
+        imdir=imdir,
+        mode=train_ds.type,
+        steps="val"
+    ).convert()
+    yolo.YOLOFormatter(
+        fpath=test_ds.export_annotation_file(AnnotationFileType.COCO, imdir),
+        imdir=imdir,
+        mode=train_ds.type,
+        steps="test"
+    ).convert()
 
-    yaml_fp = "data/data.yaml"
-    trainer = DetectionTrainer(overrides={"data": yaml_fp, "model": "yolov8n.pt", "epochs": 5, "pretrained": True, "device": "cpu"})
-    model = trainer.train()
-    results = model.val()
-    success = model.export(format="onnx")
+    yaml_fp = formatter.generate_yaml(dpath=os.path.join(imdir, 'data.yaml'))
+
+    model = YOLO("yolov8n.pt")
+    results = model.train(data=yaml_fp, epochs=3)
+    
+    wpath, rpath = yolo.get_train_infos(train_ds.type)
+    try:
+        success = model.export(format="onnx")
+        experiment.store('weights', path=wpath)
+        experiment.store('model-latest', path=wpath.replace('pt', 'onnx'))
+        res = pd.read_csv(rpath)
+        for col in res.columns:
+            try:
+                experiment.log(name=str(col), data=list(res[col]), type=LogType.LINE)
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print("failed to export ONNX model")
+        experiment.store('weights', path=wpath)
+        res = pd.read_csv(rpath)
+        for col in res.columns:
+            try:
+                experiment.log(name=str(col), data=list(res[col]), type=LogType.LINE)
+            except Exception as e:
+                print(e)
+    experiment.export_as_model(name=f"YOLOv8-{experiment.name}")
+
+
+
