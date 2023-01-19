@@ -1,5 +1,5 @@
 ultralytics==8.0.11
-picsellia==6.3.0
+picsellia==6.2.1
 torch==1.13.1
 tqdm==4.64.1
 cython==0.29.33
