@@ -132,6 +132,7 @@ dmypy.json
 # project related ignore
 
 data/*
+datasets/*
 *.yaml
 runs/
 *.pt
