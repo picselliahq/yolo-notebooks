@@ -6,10 +6,14 @@ from picsellia.types.enums import (
     AnnotationFileType, LogType
 )
 import pandas as pd 
+import shutil
 from ultralytics import YOLO
 
 if __name__ == "__main__":
+    datasets_dir = 'datasets'
     imdir = "data"
+    if not os.path.isdir(datasets_dir):
+        os.mkdir(datasets_dir)
     if not os.path.isdir(imdir):
         os.mkdir(imdir)
 
@@ -18,6 +22,11 @@ if __name__ == "__main__":
 
     experiment = picsell.get_picsellia_experiment()
     train_ds, test_ds, val_ds = picsell.get_train_test_valid_datasets(experiment=experiment)
+    
+    trained_weights = experiment.get_artifact("model-latest")
+    trained_weights.download()
+    weights_path = trained_weights.filename
+        
     parameters = experiment.get_log('parameters').data
 
     epochs = parameters.get("epochs", 30) # try to find the number of epochs in parameter, otherwise set to 30
@@ -48,8 +57,14 @@ if __name__ == "__main__":
     ).convert()
 
     yaml_fp = formatter.generate_yaml(dpath=os.path.join(imdir, 'data.yaml'))
+    
+    shutil.move(imdir, datasets_dir)
+    if not os.path.isdir(imdir):
+        os.mkdir(imdir)
+    shutil.move('datasets/data/data.yaml', 'data/data.yaml')
 
-    model = YOLO("yolov8n.pt")
+    print(f'PATH : {weights_path}')
+    model = YOLO(weights_path)
     results = model.train(data=yaml_fp, epochs=epochs)
     
     wpath, rpath = yolo.get_train_infos(train_ds.type)

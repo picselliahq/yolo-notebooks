@@ -2,6 +2,7 @@ FROM nvidia/cuda:11.4.2-cudnn8-runtime-ubuntu20.04 as base
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV GIT_PYTHON_REFRESH quiet
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt install -y build-essential 

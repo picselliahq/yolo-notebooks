@@ -24,7 +24,7 @@ def get_picsellia_client(organization_name: str = None) -> Client:
         api_token = input("Please enter your TOKEN here :")
     organization_id = os.environ.get("organization_id")
     if organization_id is None:
-        organization_id = input("Please enter your ORGANIZATorganization_idON_ID here :")
+        organization_id = input("Please enter your ORGANIZATION_ID here :")
     
     return picsellia.Client(api_token=api_token, organization_id=organization_id)
 
@@ -59,7 +59,7 @@ def get_picsellia_datasets(
     train_ds:  str = "train", test_ds: str = "test",
     val_ds: str = "val") -> List[PicselliaDatasetVersion]:
         """ 
-        Assuming that you have 3 versions of a Dataset "train", "test", "split"
+        Assuming that you have 3 versions of a Dataset "train", "test", "val"
         """
         with get_picsellia_client() as client:
             dataset = client.get_dataset(dataset_name)
