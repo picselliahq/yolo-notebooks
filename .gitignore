@@ -138,3 +138,8 @@ runs/
 *.pt
 
 project_env/
+
+*.ipynb
+
+*.mp4
+.DS_Store
