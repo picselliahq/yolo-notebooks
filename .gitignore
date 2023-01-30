@@ -143,3 +143,5 @@ project_env/
 
 *.mp4
 .DS_Store
+*.onnx
+*.avi
